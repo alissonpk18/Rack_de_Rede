@@ -1,0 +1,22 @@
+/* ============================================
+   MAIN.CSS - Arquivo Mestre de Importação
+   Enterprise Network Rack Suite 3D - Routing Engine V4.1
+   
+   Ordem de carregamento:
+   1. Variables   → Design Tokens
+   2. Base        → Reset & Tipografia
+   3. Sidebar     → Painel de Controle
+   4. Rack        → Estrutura Física
+   5. Hardware    → Equipamentos
+   6. Ports       → Portas RJ45
+   7. Cables      → Cabeamento SVG
+   ============================================ */
+
+@import url('variables.css');
+@import url('base.css');
+@import url('sidebar.css');
+@import url('rack.css');
+@import url('hardware.css');
+@import url('ports.css');
+@import url('cables.css');
+@import url('dashboard.css');

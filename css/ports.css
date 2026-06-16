@@ -1,0 +1,160 @@
+/* ============================================
+   PORTS.CSS - Portas RJ45 e Grupos de Portas
+   Enterprise Network Rack Suite 3D
+   ============================================ */
+
+/* --- Container de Portas --- */
+.ports-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.port-group {
+  display: flex;
+  gap: 2px;
+  background: #0f131a;
+  padding: 2px;
+  border: 1px solid #000;
+  border-bottom: 1px solid #334155;
+  border-radius: 2px;
+}
+
+/* --- Porta RJ45 Individual --- */
+.port-rj45 {
+  width: 14px;
+  height: 12px;
+  background: #000;
+  position: relative;
+  border-radius: 1px;
+  border-top: 2px solid #0a0a0a;
+  border-bottom: 1px solid #334155;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 1);
+  cursor: crosshair;
+  transition: border-bottom-color 0.2s;
+}
+
+.port-rj45::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 3px;
+  right: 3px;
+  height: 3px;
+  background: #1a1a1a;
+  transition: background 0.2s;
+  pointer-events: none;
+}
+
+/* --- Estados das Portas --- */
+.port-rj45:hover {
+  background: #111;
+  border-bottom-color: var(--glow-pending);
+}
+
+.port-active {
+  border: 1px solid var(--glow-active);
+  box-shadow: 0 0 10px var(--glow-active), inset 0 0 6px var(--glow-active);
+  z-index: 3;
+}
+
+.port-occupied::after {
+  background: var(--text-dim);
+}
+
+/* --- Emulação de LEDs de Status Físico (Extreme 4220) --- */
+@keyframes led-blink-green {
+  0%, 100% { background: #10b981; box-shadow: 0 0 5px #10b981; }
+  50% { background: #047857; box-shadow: 0 0 1px #047857; }
+}
+
+@keyframes led-blink-amber {
+  0%, 100% { background: #f59e0b; box-shadow: 0 0 5px #f59e0b; }
+  50% { background: #b45309; box-shadow: 0 0 1px #b45309; }
+}
+
+/* Switches piscam em verde (tráfego) ou âmbar (PoE) para as portas conectadas */
+.hardware-sw .port-occupied::after {
+  animation: led-blink-green 0.4s infinite alternate;
+}
+
+/* Metade das portas simularão PoE ativo (LED Âmbar) */
+.hardware-sw .port-occupied.port-poe::after {
+  animation: led-blink-amber 0.6s infinite alternate;
+}
+
+
+/* --- Animação de Porta Pendente --- */
+@keyframes pulse-pending {
+  0% {
+    box-shadow: 0 0 4px var(--glow-pending);
+    border-bottom-color: var(--glow-pending);
+  }
+  50% {
+    box-shadow: 0 0 12px var(--glow-pending), inset 0 0 4px var(--glow-pending);
+    border-bottom-color: #fff;
+  }
+  100% {
+    box-shadow: 0 0 4px var(--glow-pending);
+    border-bottom-color: var(--glow-pending);
+  }
+}
+
+.port-pending {
+  animation: pulse-pending 1.2s infinite;
+  background: #1f2937 !important;
+  z-index: 4;
+}
+
+/* --- Wrapper Matriz para Switch --- */
+.matrix-sw-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.matrix-sw-wrapper .port-rj45 {
+  pointer-events: auto;
+}
+
+/* --- Container do Layout do Switch (RJ45 + SFP+) --- */
+.switch-layout-container {
+  display: flex;
+  align-items: center;
+  margin-left: 170px; /* Leave space for EXTREME SW-X 4220-48P-4X brand label */
+  gap: 15px;
+}
+
+/* --- Portas SFP+ (Fibra/Uplink) --- */
+.sfp-section {
+  display: flex;
+  align-items: center;
+}
+
+.sfp-group {
+  border: 1px solid #d9c838 !important; /* Gold border for SFP+ cages */
+  box-shadow: 0 0 5px rgba(217, 200, 56, 0.25);
+  background: #0f131a;
+  padding: 3px 2px;
+}
+
+.port-sfp {
+  border: 1px solid #d9c838 !important;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  height: 14px !important;
+  width: 12px !important;
+  border-radius: 2px;
+}
+
+.port-sfp::after {
+  background: #d9c838 !important; /* Gold indicator */
+  height: 4px !important;
+  bottom: 1px !important;
+}
+
+.port-sfp.port-occupied::after {
+  background: #10b981 !important; /* Green link light when patched */
+  box-shadow: 0 0 6px #10b981;
+}
+

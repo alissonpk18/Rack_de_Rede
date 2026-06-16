@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Enterprise Network Rack Suite 3D - Ferramenta de gerenciamento visual de rack de rede com patching interativo, busca universal e dashboard de consulta automatizada de switches.">
+  <title>Enterprise Network Rack Suite 3D - Routing Engine V4.1</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <!-- ========== SIDEBAR: Painel de Controle ========== -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Ocultar/Exibir Painel">
+    <span class="toggle-icon" id="toggleIcon">☰</span>
+  </button>
+  <div class="sidebar" id="sidebar">
+
+    <!-- Grupo: Montagem Estrutural -->
+    <div class="control-group">
+      <h2>Montagem Estrutural</h2>
+      <p style="font-size: 11px; color: var(--text-dim); margin-bottom: 8px;">
+        Arraste e solte o equipamento para alterar seu (U) físico mantendo os cabos.
+      </p>
+      <div class="btn-grid">
+        <button class="btn btn-pp" onclick="instanciarEquipamento('patchpanel')">＋ Patch Panel</button>
+        <button class="btn btn-sw" onclick="instanciarEquipamento('switch')">＋ Switch 48</button>
+      </div>
+      <button class="btn btn-danger" onclick="limparRack()">Esvaziar Estrutura Física</button>
+    </div>
+
+    <!-- Grupo: Patching Interativo -->
+    <div class="control-group">
+      <h2>Patching Interativo</h2>
+
+      <div class="input-grid">
+        <select id="selOrigemHw" onchange="popularPortas('origem')"><option value="">Origem...</option></select>
+        <select id="selOrigemPorta"><option value="">Porta...</option></select>
+      </div>
+
+      <div class="input-grid">
+        <select id="selDestinoHw" onchange="popularPortas('destino')"><option value="">Destino...</option></select>
+        <select id="selDestinoPorta"><option value="">Porta...</option></select>
+      </div>
+
+      <select id="selCorCabo" style="margin-bottom: 6px;">
+        <option value="var(--cable-beige)">Cabo Bege (CAT6 Padrão)</option>
+        <option value="var(--cable-blue)">Cabo Azul (Dados Usuário)</option>
+        <option value="var(--cable-red)">Cabo Vermelho (Infra Crítica)</option>
+        <option value="var(--cable-yellow)">Cabo Amarelo (VLAN Segregada)</option>
+      </select>
+
+      <button class="btn btn-action" onclick="criarConexaoManual()">Efetuar Patching Manual</button>
+    </div>
+
+    <!-- Grupo: Busca Universal -->
+    <div class="control-group">
+      <h2>Busca Universal Inteligente</h2>
+      <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+        <input type="number" id="queryUniversal" placeholder="Digite o ID Global (Ex: 36)" min="1" style="width: 100%;">
+      </div>
+      <button class="btn btn-action" style="background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%); width: 100%;" onclick="executarBuscaUniversal()">
+        Rastrear Rota (Cálculo Físico)
+      </button>
+      <div class="terminal-log">
+        <div id="logTerminal">> Módulo de Busca Universal (Absolute ID) ativo.<br></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== MAIN CONTENT AREA ========== -->
+  <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+
+    <!-- Barra de Navegação por Abas -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-view="rack" onclick="switchView('rack')">
+        <span class="tab-icon">🗄️</span> Rack 3D
+      </button>
+      <button class="nav-tab" data-view="dashboard" onclick="switchView('dashboard')">
+        <span class="tab-icon">📊</span> Dashboard do Switch
+      </button>
+    </div>
+
+    <!-- ========== VIEW 1: RACK 3D ========== -->
+    <div class="rack-view active">
+      <div class="workspace" id="workspaceContainer">
+        <div class="rack-structure" id="rackFrame">
+          <svg class="cable-layer" id="svgCables">
+            <defs>
+              <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== VIEW 2: DASHBOARD DE CONSULTAS ========== -->
+    <div class="dashboard-view" id="dashboardView">
+
+      <!-- Barra de Conexão SSH -->
+      <div class="ssh-connection-bar">
+        <label>Host:</label>
+        <input type="text" id="sshHost" placeholder="192.168.1.1" value="192.168.1.1">
+        <label>Usuário:</label>
+        <input type="text" id="sshUser" placeholder="admin" value="admin">
+        <label>Senha:</label>
+        <input type="password" id="sshPass" placeholder="••••••" value="admin">
+        <button class="btn-connect" id="btnConectar" onclick="toggleConexao()">🔌 Conectar</button>
+        <div class="connection-status">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Desconectado</span>
+        </div>
+      </div>
+
+      <!-- Botão de Varredura Completa -->
+      <div class="full-scan-bar" style="padding-top:20px">
+        <button class="btn-full-scan" id="btnFullScan" onclick="executarVarreduraCompleta()">
+          🚀 Executar Varredura Completa
+        </button>
+        <div class="scan-progress" id="scanProgress">
+          <div class="scan-progress-bar"><div class="scan-progress-fill" id="scanProgressFill"></div></div>
+          <span class="scan-progress-text" id="scanProgressText">Aguardando...</span>
+        </div>
+      </div>
+
+      <!-- Grid de Cards de Consulta -->
+      <div class="dashboard-grid">
+
+        <!-- Card 1: Relatório do Sistema -->
+        <div class="query-card" id="cardSistema">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon system">📋</div>
+              <div>
+                <div class="card-title">Relatório do Sistema</div>
+                <div class="card-subtitle">show version + show switch</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnSistema" onclick="querySistema()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultSistema">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">📋</span>
+              Clique em Executar para ver modelo, serial, uptime e status.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Desempenho de Hardware -->
+        <div class="query-card" id="cardHardware">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon hardware">⚡</div>
+              <div>
+                <div class="card-title">Desempenho de Hardware</div>
+                <div class="card-subtitle">show cpu-monitoring + show memory</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnHardware" onclick="queryHardware()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultHardware">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">⚡</span>
+              Clique em Executar para ver uso de CPU e memória RAM.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Visão Geral das Portas (Full Width) -->
+        <div class="query-card full-width" id="cardPortas">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon ports">🔌</div>
+              <div>
+                <div class="card-title">Visão Geral das Portas</div>
+                <div class="card-subtitle">show ports no-refresh</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnPortas" onclick="queryPortas()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultPortas">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">🔌</span>
+              Clique em Executar para ver status de todas as 52 portas (48 RJ45 + 4 SFP+).
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Mapeamento de VLANs -->
+        <div class="query-card" id="cardVLANs">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon vlans">🌐</div>
+              <div>
+                <div class="card-title">Mapeamento de VLANs</div>
+                <div class="card-subtitle">show vlan</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnVLANs" onclick="queryVLANs()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultVLANs">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">🌐</span>
+              Clique em Executar para listar VLANs, IPs e portas associadas.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card PoE: Status PoE (show inline-power) -->
+        <div class="query-card" id="cardPoE">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon poe">⚡</div>
+              <div>
+                <div class="card-title">Status PoE (Inline Power)</div>
+                <div class="card-subtitle">show inline-power</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnPoE" onclick="queryPoE()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultPoE">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">⚡</span>
+              Clique em Executar para ver consumo PoE e budget total do switch.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5: Tabela de Dispositivos (MAC/FDB) -->
+        <div class="query-card" id="cardMAC">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon mac">🖥️</div>
+              <div>
+                <div class="card-title">Tabela de Dispositivos (MAC/FDB)</div>
+                <div class="card-subtitle">show fdb</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnMAC" onclick="queryMAC()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultMAC">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">🖥️</span>
+              Clique em Executar para ver MAC → Porta → VLAN de cada dispositivo.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card LLDP: Descoberta de Rede (show lldp neighbors) -->
+        <div class="query-card" id="cardLLDP">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon lldp">📡</div>
+              <div>
+                <div class="card-title">Descoberta de Rede (LLDP)</div>
+                <div class="card-subtitle">show lldp neighbors</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnLLDP" onclick="queryLLDP()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultLLDP">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">📡</span>
+              Clique em Executar para listar equipamentos vizinhos por LLDP.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Stacking: Empilhamento (show stacking) -->
+        <div class="query-card" id="cardStacking">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon stacking">🔗</div>
+              <div>
+                <div class="card-title">Empilhamento (Stacking)</div>
+                <div class="card-subtitle">show stacking</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnStacking" onclick="queryStacking()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultStacking">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">🔗</span>
+              Clique em Executar para ver topologia do empilhamento e membros.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: Logs de Eventos (Full Width) -->
+        <div class="query-card full-width" id="cardLogs">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon logs">📜</div>
+              <div>
+                <div class="card-title">Logs de Eventos</div>
+                <div class="card-subtitle">show log</div>
+              </div>
+            </div>
+            <button class="btn-query" id="btnLogs" onclick="queryLogs()">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">▶ Executar</span>
+            </button>
+          </div>
+          <div class="card-body" id="resultLogs">
+            <div class="card-placeholder">
+              <span class="placeholder-icon">📜</span>
+              Clique em Executar para coletar os últimos eventos do switch.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== SCRIPTS: Ordem de Carregamento ========== -->
+  <!-- 1. Estado global (variáveis compartilhadas) -->
+  <script src="js/state.js"></script>
+  <!-- 2. Logger (dependência de todos os módulos) -->
+  <script src="js/logger.js"></script>
+  <!-- 3. Cable Renderer (dependência do rack-engine) -->
+  <script src="js/cable-renderer.js"></script>
+  <!-- 4. Rack Engine (inicialização, drag & drop, renderização) -->
+  <script src="js/rack-engine.js"></script>
+  <!-- 5. Patching (interativo e manual) -->
+  <script src="js/patching.js"></script>
+  <!-- 6. Search Engine (busca universal) -->
+  <script src="js/search-engine.js"></script>
+  <!-- 7. Switch Query Engine (dashboard de consultas) -->
+  <script src="js/switch-query.js"></script>
+  <!-- 8. App Bootstrap (inicialização e event listeners) -->
+  <script src="js/app.js"></script>
+  <script>
+    // --- Sidebar Toggle ---
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const toggleBtn = document.getElementById('sidebarToggle');
+      const icon = document.getElementById('toggleIcon');
+      sidebar.classList.toggle('collapsed');
+      toggleBtn.classList.toggle('collapsed');
+      if (sidebar.classList.contains('collapsed')) {
+        icon.textContent = '☰';
+        toggleBtn.title = 'Exibir Painel';
+      } else {
+        icon.textContent = '✕';
+        toggleBtn.title = 'Ocultar Painel';
+      }
+      // Recalcular cabos após transição
+      setTimeout(processarCabeamento, 350);
+    }
+    // Inicializar ícone
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('toggleIcon').textContent = '✕';
+    });
+  </script>
+
+</body>
+</html>

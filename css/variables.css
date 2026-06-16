@@ -1,0 +1,30 @@
+/* ============================================
+   VARIABLES.CSS - Design Tokens & CSS Custom Properties
+   Enterprise Network Rack Suite 3D
+   ============================================ */
+
+:root {
+  /* --- Cores de Fundo da Aplicação --- */
+  --bg-app: #121820;
+  --ui-panel: #1e2632;
+  --ui-border: #2a3441;
+
+  /* --- Tipografia --- */
+  --text-main: #e2e8f0;
+  --text-dim: #64748b;
+
+  /* --- Estrutura Metálica do Rack --- */
+  --rack-metal-dark: #11151c;
+  --rack-metal-mid: #252e3d;
+  --rack-metal-light: #3a475c;
+
+  /* --- Paleta de Cabos --- */
+  --cable-beige: #d4c4a8;
+  --cable-red: #d93838;
+  --cable-blue: #3882d9;
+  --cable-yellow: #d9c838;
+
+  /* --- Indicadores de Status --- */
+  --glow-active: #2dd4bf;
+  --glow-pending: #f59e0b;
+}
