@@ -206,13 +206,15 @@ function renderizarHardware() {
     const pDst = document.querySelector(`#${c.dstId} .port-rj45[data-port-local="${c.dstPort}"]`);
     if (pSrc) {
       pSrc.classList.add('port-occupied');
-      if (c.srcId.startsWith('SW') && c.srcPort % 2 === 0) {
+      const srcEq = rackState.find(e => e.id === c.srcId);
+      if (srcEq?.tipo === 'switch' && c.srcPort % 2 === 0) {
         pSrc.classList.add('port-poe');
       }
     }
     if (pDst) {
       pDst.classList.add('port-occupied');
-      if (c.dstId.startsWith('SW') && c.dstPort % 2 === 0) {
+      const dstEq = rackState.find(e => e.id === c.dstId);
+      if (dstEq?.tipo === 'switch' && c.dstPort % 2 === 0) {
         pDst.classList.add('port-poe');
       }
     }

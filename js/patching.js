@@ -112,8 +112,8 @@ function popularPortas(alvo) {
   const eq = rackState.find(e => e.id === hwId);
   for (let i = 1; i <= eq.portas; i++) {
     const ocupada = conexoesAtivas.some(c =>
-      (c.srcId === hwId && c.srcPort == i) ||
-      (c.dstId === hwId && c.dstPort == i)
+      (c.srcId === hwId && c.srcPort === i) ||
+      (c.dstId === hwId && c.dstPort === i)
     );
     const disableFlag = ocupada ? 'disabled' : '';
     const textSuffix = ocupada ? ' (Ocupada)' : '';
