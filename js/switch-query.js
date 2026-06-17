@@ -179,7 +179,7 @@ function gerarDadosStacking() {
     stackMembers.push({
       slot: index + 1,
       role: role,
-      mac: sw.mac || gerarMAC(),
+      mac: gerarMAC(),
       status: 'Active',
       modelo: '4220-48P-4X',
       prioridade: isMaster ? 100 : isBackup ? 90 : 50
